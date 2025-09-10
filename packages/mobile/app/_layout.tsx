@@ -1,4 +1,20 @@
 import { Stack } from 'expo-router';
+import './global.css';
+import { useFonts } from 'expo-font';
+
 export default function RootLayout() {
-   return <Stack />;
+   const [fontsLoaded] = useFonts({
+      'Poppins-Regular': require('../assets/fonts/Poppins-Regular.ttf'),
+      'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
+   });
+
+   if (!fontsLoaded) {
+      return null; // or a splash screen
+   }
+
+   return (
+      <Stack>
+         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+   );
 }

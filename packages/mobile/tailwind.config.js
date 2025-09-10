@@ -9,6 +9,11 @@ module.exports = {
    presets: [require('nativewind/preset')],
    theme: {
       extend: {
+         fontFamily: {
+            primary: 'Poppins-Regular',
+            medium: 'Poppins-Medium',
+            bold: 'Poppins-Bold',
+         },
          colors: {
             // Base colors
             background: 'var(--color-background)',
