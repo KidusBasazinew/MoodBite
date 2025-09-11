@@ -11,8 +11,8 @@ module.exports = {
       extend: {
          fontFamily: {
             primary: 'Poppins-Regular',
-            medium: 'Poppins-Medium',
-            bold: 'Poppins-Bold',
+            med: 'Poppins-Medium',
+            bolder: 'Poppins-Bold',
          },
          colors: {
             // Base colors

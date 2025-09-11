@@ -9,6 +9,7 @@ export default function TabLayout() {
          screenOptions={({ route }) => ({
             headerShown: false,
             tabBarShowLabel: false, // custom labels
+
             tabBarIcon: ({ focused }) => {
                let icon: any;
 
@@ -42,7 +43,7 @@ export default function TabLayout() {
                      <View
                         className={`rounded-full items-center justify-center ${
                            focused
-                              ? 'w-16 h-16 bg-yellow-400 -mt-4 shadow-lg'
+                              ? 'w-16 h-16 bg-yellow-400 -mt-4 '
                               : 'w-18 h-18  w-full mt-6'
                         }`}
                      >
@@ -67,8 +68,9 @@ export default function TabLayout() {
                position: 'absolute',
                height: 70,
                backgroundColor: 'white',
-               borderTopWidth: 0,
+               borderTopWidth: 1,
                elevation: 0,
+               borderTopColor: '#e5e5e5',
             },
          })}
       >

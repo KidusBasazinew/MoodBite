@@ -15,6 +15,11 @@ export default function RootLayout() {
    return (
       <Stack>
          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+         <Stack.Screen
+            name="food_detail"
+            //   component={FoodDetail}
+            options={{ headerShown: false }}
+         />
       </Stack>
    );
 }
