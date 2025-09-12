@@ -49,7 +49,7 @@ export default function OnboardingScreen() {
          scrollRef.current?.scrollTo({ x: next * width, animated: true });
       } else {
          // setOnboarded().then(() => router.replace('/(tabs)'));
-         router.replace('/login');
+         router.replace('/sign-in');
       }
    };
 

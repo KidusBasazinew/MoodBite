@@ -14,26 +14,48 @@ import {
    View,
 } from 'react-native';
 import { z } from 'zod';
-import Button from './components/Button';
-import logo from '../assets/images/logo.png';
+import Button from '../components/Button';
+import logo from '../../assets/images/logo.png';
+import { useSignIn } from '@clerk/clerk-expo';
 
 const schema = z.object({
-   name: z.string().min(2, 'Enter your name'),
    email: z.string().email('Enter a valid email'),
    password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type FormData = z.infer<typeof schema>;
 
-export default function Signup() {
+export default function Login() {
+   const { signIn, setActive, isLoaded } = useSignIn();
+
    const {
       control,
       handleSubmit,
       formState: { errors },
    } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-   const onSubmit = (data: FormData) => {
-      console.log('Signup:', data);
+   const onSubmit = async (data: FormData) => {
+      if (!isLoaded) return;
+
+      console.log('Login:', data);
+
+      try {
+         const signInAttempt = await signIn.create({
+            identifier: data.email,
+            password: data.password,
+         });
+         // If sign-in process is complete, set the created session as active
+         // and redirect the user
+         if (signInAttempt.status === 'complete') {
+            await setActive({ session: signInAttempt.createdSessionId });
+            router.replace('/(tabs)');
+         } else {
+            console.error(JSON.stringify(signInAttempt, null, 2));
+         }
+      } catch (error) {
+         console.error(JSON.stringify(error, null, 2));
+      }
+
       router.replace('/(tabs)');
    };
 
@@ -48,36 +70,13 @@ export default function Signup() {
          >
             <Image source={logo} className="w-24 h-24" />
             <Text style={styles.title} className="mt-10 font-bolder">
-               Create account
+               Welcome back
             </Text>
             <Text style={styles.subtitle} className="font-primary">
-               Join MoodBite today
+               Sign in to continue
             </Text>
 
             <View style={styles.inputContainer}>
-               <View style={styles.inputWrapper}>
-                  <MaterialIcons name="person" size={24} color="gray" />
-                  <Controller
-                     control={control}
-                     name="name"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           style={styles.textInput}
-                           className="font-primary"
-                           placeholder="Full name"
-                           placeholderTextColor="#999"
-                           value={value}
-                           onChangeText={onChange}
-                        />
-                     )}
-                  />
-               </View>
-               {errors.name && (
-                  <Text className="font-primary text-red-500">
-                     {errors.name.message}
-                  </Text>
-               )}
-
                <View style={styles.inputWrapper}>
                   <MaterialIcons name="email" size={24} color="gray" />
                   <Controller
@@ -128,17 +127,20 @@ export default function Signup() {
                )}
 
                <Button
-                  title="Sign Up"
+                  title="Log In"
                   containerStyle={'mt-4'}
                   onPress={handleSubmit(onSubmit)}
                />
 
                <View className="mt-4 flex-row justify-center">
                   <Text className="font-primary text-gray-600">
-                     Already have an account?{' '}
+                     Don't have an account?{' '}
                   </Text>
-                  <Link href="/login" className="font-primary text-yellow-500">
-                     Log in
+                  <Link
+                     href="/sign-up"
+                     className="font-primary text-yellow-500"
+                  >
+                     Sign up
                   </Link>
                </View>
             </View>
