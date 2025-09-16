@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import axios from '../../lib/axios';
 import {
    Image,
    KeyboardAvoidingView,
@@ -18,6 +19,7 @@ import {
 import { z } from 'zod';
 import logo from '../../assets/images/logo.png';
 import Button from '../components/Button';
+import axiosInstance from '../../lib/axios';
 
 const verificationSchema = z.object({
    code: z.string().min(6, 'Enter a valid code'),
@@ -38,6 +40,7 @@ export default function Signup() {
    const [isVerifying, setIsVerifying] = React.useState(false);
    const [signUpError, setSignUpError] = React.useState<string>('');
    const [isSigningUp, setIsSigningUp] = React.useState(false);
+   const inputRefs = React.useRef<Array<TextInput | null>>([]);
 
    // const [code, setCode] = React.useState('');
    const {
@@ -62,6 +65,11 @@ export default function Signup() {
             password: data.password,
          });
 
+         await axiosInstance.post('/users', {
+            username: data.username,
+            emailAddress: data.email,
+         });
+
          // Send user an email with verification code
          await signUp.prepareEmailAddressVerification({
             strategy: 'email_code',
@@ -78,10 +86,13 @@ export default function Signup() {
       if (!isLoaded) return;
 
       try {
+         // Use the code the user provided to attempt verification
          const signUpAttempt = await signUp.attemptEmailAddressVerification({
             code: data.code,
          });
 
+         // If verification was completed, set the session to active
+         // and redirect the user
          if (signUpAttempt.status === 'complete') {
             await setActive({ session: signUpAttempt.createdSessionId });
             router.replace('/');
@@ -90,48 +101,81 @@ export default function Signup() {
             // complete further steps.
             console.error(JSON.stringify(signUpAttempt, null, 2));
          }
-      } catch (error: any) {
+      } catch (err) {
          // See https://clerk.com/docs/custom-flows/error-handling
          // for more info on error handling
-         console.error(JSON.stringify(error, null, 2));
+         console.error(JSON.stringify(err, null, 2));
       }
    };
 
    if (pendingVerification) {
       return (
-         <View className="flex-1 justify-center items-center px-6">
-            <Text className="text-2xl font-bold mb-6">Verify your email</Text>
-            <Text className="text-gray-600 mb-8 text-center">
+         <View className="flex-1 justify-center items-center px-6 bg-white">
+            <Text className=" text-2xl font-bolder mb-2 text-center">
+               Verify your email
+            </Text>
+            <Text className="font-primary text-gray-600 mb-8 text-center">
                We've sent a verification code to your email address. Please
                enter it below.
             </Text>
 
-            <Controller
-               control={verificationControl}
-               name="code"
-               render={({ field: { onChange, value } }) => (
-                  <TextInput
-                     style={styles.textInput}
-                     className="font-primary"
-                     placeholder="Enter verification code"
-                     placeholderTextColor="#999"
-                     value={value}
-                     onChangeText={onChange}
-                     keyboardType="numeric"
-                     maxLength={6}
-                     editable={!isVerifying}
+            <View
+               style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 10,
+                  marginBottom: 16,
+               }}
+            >
+               {Array.from({ length: 6 }).map((_, index) => (
+                  <Controller
+                     key={index}
+                     control={verificationControl}
+                     name="code"
+                     defaultValue=""
+                     render={({ field: { value, onChange } }) => {
+                        const codeArray = value
+                           ? value.split('')
+                           : Array(6).fill('');
+
+                        return (
+                           <TextInput
+                              style={styles.codeBox}
+                              maxLength={1}
+                              keyboardType="numeric"
+                              value={codeArray[index]}
+                              onChangeText={(text) => {
+                                 if (!text) {
+                                    // backspace
+                                    codeArray[index] = '';
+                                    if (index > 0)
+                                       inputRefs.current[index - 1]?.focus();
+                                 } else {
+                                    // type a digit
+                                    codeArray[index] = text[0];
+                                    if (index < 5)
+                                       inputRefs.current[index + 1]?.focus();
+                                 }
+                                 onChange(codeArray.join(''));
+                              }}
+                              ref={(ref) => {
+                                 if (ref) inputRefs.current[index] = ref;
+                              }}
+                              textAlign="center"
+                           />
+                        );
+                     }}
                   />
-               )}
-            />
+               ))}
+            </View>
 
             {verificationErrors.code && (
-               <Text className="font-primary text-red-500 mt-2">
+               <Text className="font-primary text-red-500 mb-2 text-center">
                   {verificationErrors.code.message}
                </Text>
             )}
-
             {verificationError && (
-               <Text className="font-primary text-red-500 mt-2 text-center">
+               <Text className="font-primary text-red-500 mb-2 text-center">
                   {verificationError}
                </Text>
             )}
@@ -139,11 +183,11 @@ export default function Signup() {
             <TouchableOpacity
                onPress={handleVerifySubmit(onVerifyPress)}
                disabled={isVerifying}
-               className={`mt-6 px-8 py-3 rounded-lg ${
-                  isVerifying ? 'bg-gray-400' : 'bg-blue-500'
+               className={` mt-4 px-10 py-3 rounded-lg ${
+                  isVerifying ? 'bg-gray-400' : 'bg-yellow-500'
                }`}
             >
-               <Text className="text-white font-bold">
+               <Text className="font-primary text-white font-bold text-center">
                   {isVerifying ? 'Verifying...' : 'Verify'}
                </Text>
             </TouchableOpacity>
@@ -153,7 +197,9 @@ export default function Signup() {
                className="mt-4"
                disabled={isVerifying}
             >
-               <Text className="text-blue-500">Back to sign up</Text>
+               <Text className="font-primary text-blue-500 text-center">
+                  Back to sign up
+               </Text>
             </TouchableOpacity>
          </View>
       );
@@ -300,4 +346,14 @@ const styles = StyleSheet.create({
       marginBottom: 2,
    },
    textInput: { flex: 1, fontSize: 14, paddingVertical: 0 },
+   codeBox: {
+      width: 45,
+      height: 50,
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      borderRadius: 8,
+      textAlign: 'center',
+      fontSize: 20,
+      color: '#111827',
+   },
 });
