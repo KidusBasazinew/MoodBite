@@ -2,7 +2,7 @@ import prisma from '../prismaClient';
 import { type Request, type Response } from 'express';
 
 export const createUser = async (req: Request, res: Response) => {
-   const { emailAddress, username } = req.body;
+   const { clerkId, emailAddress, username } = req.body;
    console.log('Creating user:', emailAddress, username);
    if (!emailAddress || !username) {
       return res
@@ -22,6 +22,7 @@ export const createUser = async (req: Request, res: Response) => {
 
       const newUser = await prisma.user.create({
          data: {
+            clerkId,
             emailAddress,
             username,
             preferences: [], // send empty array

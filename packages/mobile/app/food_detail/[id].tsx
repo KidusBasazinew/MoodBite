@@ -9,8 +9,8 @@ import {
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import moodImg from '../assets/icons/mood.png';
-import light from '../assets/icons/light.png';
+import moodImg from '../../assets/icons/mood.png';
+import light from '../../assets/icons/light.png';
 import { EvilIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams, useSearchParams } from 'expo-router/build/hooks';

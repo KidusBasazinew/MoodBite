@@ -16,9 +16,11 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { router } from 'expo-router';
+import axiosInstance from '@/lib/axios';
+import { useUser } from '@clerk/clerk-expo';
 
 const schema = z.object({
-   feeling: z.string().min(2, 'Feeling must be at least 2 characters'),
+   mood: z.string().min(2, 'mood must be at least 2 characters'),
    location: z.string().min(2, 'Location must be at least 2 characters'),
 });
 type FormData = z.infer<typeof schema>;
@@ -32,9 +34,17 @@ export default function Index() {
       resolver: zodResolver(schema),
    });
 
-   const onSubmit = (data: FormData) => {
+   const { user } = useUser();
+
+   const onSubmit = async (data: FormData) => {
       console.log('Form submitted:', data);
-      router.push({ pathname: '/food_detail', params: { ...data } });
+      const res = await axiosInstance.post('/meal', {
+         clerkId: user?.id, // from Clerk
+         mood: data.mood,
+         location: data.location,
+      });
+
+      router.push(`/food_detail/${res.data.meal.savedMeal.id}`);
    };
 
    return (
@@ -51,7 +61,7 @@ export default function Index() {
 
             {/* Greeting Text */}
             <Text style={styles.greeting} className="font-primary">
-               Hi! I’m MOOdy 🤖. How are you feeling today? Tell me, and I’ll
+               Hi! I’m MOOdy 🤖. How are you mood today? Tell me, and I’ll
                suggest the perfect food!
             </Text>
 
@@ -66,7 +76,7 @@ export default function Index() {
                   />
                   <Controller
                      control={control}
-                     name="feeling"
+                     name="mood"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
                            className="font-primary"
@@ -79,9 +89,9 @@ export default function Index() {
                      )}
                   />
                </View>
-               {errors.feeling && (
+               {errors.mood && (
                   <Text className="font-primary text-red-500">
-                     {errors.feeling.message}
+                     {errors.mood.message}
                   </Text>
                )}
 

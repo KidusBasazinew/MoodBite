@@ -65,10 +65,11 @@ export default function Signup() {
             password: data.password,
          });
 
-         await axiosInstance.post('/users', {
-            username: data.username,
-            emailAddress: data.email,
-         });
+         // await axiosInstance.post('/users', {
+         //    username: data.username,
+         //    emailAddress: data.email,
+         //    clerkId: user.id
+         // });
 
          // Send user an email with verification code
          await signUp.prepareEmailAddressVerification({
@@ -95,6 +96,15 @@ export default function Signup() {
          // and redirect the user
          if (signUpAttempt.status === 'complete') {
             await setActive({ session: signUpAttempt.createdSessionId });
+
+            const clerkUserId = signUpAttempt.createdUserId;
+
+            await axiosInstance.post('/users', {
+               username: signUp.username, // Clerk stores this
+               emailAddress: signUp.emailAddress,
+               clerkId: clerkUserId, // <- save Clerk ID
+            });
+
             router.replace('/');
          } else {
             // If the status is not complete, check why. User may need to

@@ -25,7 +25,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen
-               name="food_detail"
+               name="food_detail/[id]"
                //   component={FoodDetail}
                options={{ headerShown: false }}
             />
