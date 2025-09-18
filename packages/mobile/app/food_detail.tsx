@@ -15,6 +15,7 @@ import { EvilIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams, useSearchParams } from 'expo-router/build/hooks';
 import axiosInstance from '@/lib/axios';
+import MealImageCarousel from './components/MealImageCarousel';
 type Nutrition = {
    name: string;
    amount: number;
@@ -43,6 +44,7 @@ const food_detail = () => {
    const router = useRouter();
 
    const [meal, setMeal] = useState<Meal | null>(null);
+   const [nutrition, setNutrition] = useState<Nutrition | null>(null);
 
    const getMeal = async () => {
       const response = await axiosInstance.get(`/meal/${id}`);
@@ -50,16 +52,23 @@ const food_detail = () => {
 
       setMeal(response?.data?.meal?.savedMeal);
    };
+   const getNutritions = async () => {
+      const response = await axiosInstance.get(`/meal/nutrition/${id}`);
+      console.log(response?.data?.nutrition);
+
+      setNutrition(response?.data?.nutrition);
+   };
 
    useEffect(() => {
       getMeal();
+      getNutritions();
    }, []);
 
    return (
       <SafeAreaProvider>
          <SafeAreaView edges={['top']}>
             <ScrollView>
-               <ImageBackground
+               {/* <ImageBackground
                   source={{
                      uri: meal?.imageUrls[0],
                   }}
@@ -77,8 +86,8 @@ const food_detail = () => {
                         p-2 bg-gray-600 rounded-full opacity-80"
                      />
                   </TouchableOpacity>
-               </ImageBackground>
-
+               </ImageBackground> */}
+               <MealImageCarousel meal={meal!} />
                <View className="-mt-6 bg-gray-100 rounded-t-3xl p-6 overflow-hidden">
                   <Text className="text-2xl font-bolder mb-2">
                      {meal?.name}
@@ -93,14 +102,19 @@ const food_detail = () => {
                <View className="flex flex-col">
                   <View className="flex flex-row justify-between px-4 py-2 border-b border-gray-200">
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
-                        <Text className="font-bolder text-4xl">350</Text>
+                        <Text className="font-bolder text-4xl">
+                           {nutrition?.calories}
+                        </Text>
                         <Text className="font-primary text-center">
                            Calories
                         </Text>
                      </View>
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
                         <Text className="font-bolder text-4xl text-center">
-                           35<Text className="text-lg font-primary">g</Text>
+                           {nutrition?.protein}
+                           <Text className="text-lg font-primary">
+                              {nutrition?.unit}
+                           </Text>
                         </Text>
                         <Text className="font-primary text-center">
                            Protein
@@ -108,7 +122,10 @@ const food_detail = () => {
                      </View>
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
                         <Text className="font-bolder text-4xl text-center">
-                           35<Text className="text-lg font-primary">g</Text>
+                           {nutrition?.carbs}
+                           <Text className="text-lg font-primary">
+                              {nutrition?.unit}
+                           </Text>
                         </Text>
                         <Text className="font-primary text-center">Carb</Text>
                      </View>
@@ -116,19 +133,28 @@ const food_detail = () => {
                   <View className="flex flex-row justify-between px-4 py-2 border-b border-gray-200">
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
                         <Text className="font-bolder text-4xl">
-                           35<Text className="text-lg font-primary">g</Text>
+                           {nutrition?.fat}
+                           <Text className="text-lg font-primary">
+                              {nutrition?.unit}
+                           </Text>
                         </Text>
                         <Text className="font-primary text-center">Fat</Text>
                      </View>
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
                         <Text className="font-bolder text-4xl text-center">
-                           35<Text className="text-lg font-primary">g</Text>
+                           {nutrition?.fiber}
+                           <Text className="text-lg font-primary">
+                              {nutrition?.unit}
+                           </Text>
                         </Text>
                         <Text className="font-primary text-center">Fiber</Text>
                      </View>
                      <View className="rounded-xl w-28 bg-white p-4 shadow-md">
                         <Text className="font-bolder text-4xl text-center">
-                           35<Text className="text-lg font-primary">g</Text>
+                           {nutrition?.sugar}
+                           <Text className="text-lg font-primary">
+                              {nutrition?.unit}
+                           </Text>
                         </Text>
                         <Text className="font-primary text-center">Suger</Text>
                      </View>
@@ -204,24 +230,18 @@ const food_detail = () => {
                <View className="p-6">
                   <Text className="text-lg font-bolder mb-2">Recipe</Text>
                   <View className="ml-4">
-                     <Text className="font-primary text-gray-700 mb-1">
-                        1. Rinse the quinoa and cook it according to package
-                        instructions.
-                     </Text>
-                     <Text className="font-primary text-gray-700 mb-1">
-                        2. Chop all vegetables and place them in a large mixing
-                        bowl.
-                     </Text>
-                     <Text className="font-primary text-gray-700 mb-1">
-                        3. Add cooked quinoa to the bowl and mix well.
-                     </Text>
-                     <Text className="font-primary text-gray-700 mb-1">
-                        4. Drizzle olive oil and lemon juice over the salad.
-                     </Text>
-                     <Text className="font-primary text-gray-700 mb-1">
-                        5. Season with salt and pepper, toss again, and serve
-                        chilled.
-                     </Text>
+                     {meal?.recipe?.map((rec, index) => {
+                        return (
+                           <Text
+                              key={index}
+                              className="font-primary text-gray-700 mb-1"
+                           >
+                              {index + 1}
+                              {'. '}
+                              {rec}
+                           </Text>
+                        );
+                     })}
                   </View>
                </View>
 

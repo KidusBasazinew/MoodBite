@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
    ImageBackground,
    Text,
@@ -8,6 +8,7 @@ import {
    Platform,
    ScrollView,
    StyleSheet,
+   ActivityIndicator,
 } from 'react-native';
 import robot from '../../assets/images/robot_recomanded.png';
 import Button from '../components/Button';
@@ -18,6 +19,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { router } from 'expo-router';
 import axiosInstance from '@/lib/axios';
 import { useUser } from '@clerk/clerk-expo';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 const schema = z.object({
    mood: z.string().min(2, 'mood must be at least 2 characters'),
@@ -26,6 +28,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function Index() {
+   const [isLoading, setIsLoading] = useState(false);
    const {
       control,
       handleSubmit,
@@ -37,14 +40,26 @@ export default function Index() {
    const { user } = useUser();
 
    const onSubmit = async (data: FormData) => {
-      console.log('Form submitted:', data);
-      const res = await axiosInstance.post('/meal', {
-         clerkId: user?.id, // from Clerk
-         mood: data.mood,
-         location: data.location,
-      });
-
-      router.push(`/food_detail/${res.data.meal.savedMeal.id}`);
+      try {
+         setIsLoading(true);
+         const res = await axiosInstance.post('/meal', {
+            clerkId: user?.id, // from Clerk
+            mood: data.mood,
+            location: data.location,
+         });
+         const id = res?.data?.meal?.savedMeal?.id;
+         if (id) {
+            router.push({
+               pathname: '/food_detail/[id]',
+               params: { id: id as string },
+            });
+         }
+         console.log(res?.data?.meal?.savedMeal);
+      } catch (error) {
+         console.error(error);
+      } finally {
+         setIsLoading(false);
+      }
    };
 
    return (
@@ -56,6 +71,9 @@ export default function Index() {
             contentContainerStyle={styles.scrollViewContent}
             keyboardShouldPersistTaps="handled"
          >
+            {isLoading && (
+               <LoadingOverlay message="AI is preparing your meal..." />
+            )}
             {/* Robot Image */}
             <ImageBackground source={robot} style={styles.robot} />
 

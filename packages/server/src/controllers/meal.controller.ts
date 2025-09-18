@@ -36,7 +36,7 @@ export const createMeal = async (req: Request, res: Response) => {
 
     JSON format:
     {
-      "name":"short name of the meal you prepare for me"
+      "name":"short name of the meal you prepare for me",
       "mood": "${mood}",
       "location": "${location}",
       "description": "A short appetizing description of the meal.",
@@ -64,6 +64,11 @@ export const createMeal = async (req: Request, res: Response) => {
 
       const mealData = parseMarkdownToJson(textResult.response.text());
 
+      if (!mealData) {
+         console.error('AI returned invalid JSON:', textResult.response.text());
+         return res.status(500).json({ error: 'Invalid AI JSON' });
+      }
+
       // const searchQuery =
       //    meal.name?.trim() || meal.description?.trim() || meal.mood?.trim();
 
@@ -89,6 +94,7 @@ export const createMeal = async (req: Request, res: Response) => {
       const savedMeal = await prisma.meal.create({
          data: {
             userId: user?.id, // from req.body
+            name: mealData.name,
             mood: mealData.mood || mood,
             location: mealData.location || location,
             description: mealData.description,
@@ -114,7 +120,10 @@ export const createMeal = async (req: Request, res: Response) => {
 
       res.status(201).json({ meal: { savedMeal } });
    } catch (error) {
-      res.status(500).send('Error in genAi ' + error);
+      console.error('❌ Backend error:', error);
+      res.status(500).json({
+         error: error instanceof Error ? error.message : String(error),
+      });
    }
 };
 function parseMarkdownToJson(markdown: string): any {
@@ -132,6 +141,58 @@ function parseMarkdownToJson(markdown: string): any {
       return null;
    }
 }
+export const getMeal = async (req: Request, res: Response) => {
+   const { id } = req.params;
+
+   try {
+      const meal = await prisma.meal.findUnique({
+         where: { id },
+         include: {
+            nutrition: true,
+            user: {
+               select: {
+                  id: true,
+                  username: true,
+                  emailAddress: true,
+               },
+            },
+         },
+      });
+
+      if (!meal) {
+         return res.status(404).json({ error: 'Meal not found' });
+      }
+
+      res.status(200).json({ meal: { savedMeal: meal } });
+   } catch (error) {
+      console.error('Error fetching meal:', error);
+      res.status(500).json({ error: 'Internal server error' });
+   }
+};
+
+export const getNutritionByMealId = async (req: Request, res: Response) => {
+   const { id } = req.params;
+
+   try {
+      if (!id) {
+         return res.status(404).json({ message: 'Meal not found!' });
+      }
+
+      const nutrition = await prisma.nutrition.findFirst({
+         where: { mealId: id },
+      });
+
+      if (!nutrition) {
+         return res.status(404).json({ message: 'Nutrition not found!' });
+      }
+
+      res.status(200).json({ nutrition });
+   } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+   }
+};
+
 function getUnsplashQuery(meal: any) {
    if (!meal) return 'food';
    // Use only main name keywords

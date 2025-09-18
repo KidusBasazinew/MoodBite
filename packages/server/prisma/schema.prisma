@@ -45,6 +45,7 @@ model Meal {
   mood        String
   location    String
   imageUrls   String[]
+  name        String
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
